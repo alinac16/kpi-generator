@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce KPI Analysis</title>
+    <!-- Using Sarabun for Thai font support -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Color Palette */
+        :root {
+            --dark-moss-green: #606c38ff;
+            --pakistan-green: #283618ff;
+            --cornsilk: #fefae0ff;
+            --earth-yellow: #dda15eff;
+            --tigers-eye: #bc6c25ff;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--cornsilk);
+            color: var(--pakistan-green);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+            overflow: hidden; /* Hide scrollbar initially */
+        }
+
+        /* Initial hidden state for main content wrapper */
+        #main-content-wrapper {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+        }
+
+        /* Spinner Styles */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--cornsilk); /* Match body background */
+            display: flex;
+            flex-direction: column; /* Stack spinner and image */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+
+        .spinner {
+            border: 8px solid var(--earth-yellow); /* Light border */
+            border-top: 8px solid var(--tigers-eye); /* Darker border for spin effect */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px; /* Space between spinner and image */
+        }
+
+        .spinner-overlay img.banner-loading-image {
+            max-width: 80%; /* Adjust size as needed within spinner overlay */
+            height: auto;
+            border-radius: 8px; /* Rounded corners for the image */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Subtle shadow */
+        }
+
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        header {
+            background-color: var(--pakistan-green);
+            padding: 20px 0;
+            text-align: center;
+            color: var(--cornsilk);
+        }
+
+        header img.logo {
+            max-width: 280px;
+            height: auto;
+            display: block;
+            margin: 0 auto 10px;
+            border-radius: 5px;
+        }
+
+        /* The main banner image section, not part of spinner overlay anymore */
+        .banner-image-section {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .banner-image-section img {
+            width: 100%;
+            max-width: 1512px; /* Original image width */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            border-radius: 8px; /* Maintain rounded corners */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Subtle shadow for visual pop */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        h1, h2, h3 {
+            color: var(--dark-moss-green);
+        }
+
+        .platform-selection {
+            background-color: var(--fefae0ff);
+            border: 1px solid var(--earth-yellow);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-selection label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: var(--dark-moss-green);
+        }
+
+        .platform-selection select {
+            padding: 8px 12px;
+            border: 1px solid var(--earth-yellow);
+            border-radius: 5px;
+            background-color: white;
+            color: var(--pakistan-green);
+            font-size: 1em;
+            cursor: default; /* Make it non-interactive for display-only */
+        }
+
+        .kpi-section {
+            background-color: var(--fefae0ff);
+            border: 1px solid var(--earth-yellow);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .kpi-section h3 {
+            color: var(--tigers-eye);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--earth-yellow);
+        }
+
+        .kpi-section p strong {
+            color: var(--dark-moss-green);
+        }
+
+        .kpi-section .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--earth-yellow);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .kpi-section .lang-toggle:hover {
+            background-color: var(--tigers-eye);
+        }
+
+        /* Language content display control */
+        .kpi-content-en, .kpi-content-th {
+            padding-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .info-box {
+            background-color: #fff9e6; /* Lighter cornsilk */
+            border-left: 5px solid var(--tigers-eye);
+            padding: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: var(--pakistan-green);
+            font-size: 0.9em;
+        }
+        .info-box p {
+            margin: 0;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px auto;
+                padding: 0 10px;
+            }
+            .kpi-section, .platform-selection {
+                padding: 15px;
+            }
+            .kpi-section .lang-toggle {
+                position: static;
+                display: block;
+                width: calc(100% - 30px);
+                margin: 10px auto; /* Center button on small screens */
+                text-align: center;
+            }
+            .platform-selection select {
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="spinner-overlay" id="spinner-overlay">
+        <div class="spinner"></div>
+        <!-- Banner image now shown within the spinner overlay during loading -->
+        <img class="banner-loading-image" src="https://nanacoffeeroasters.com/cdn/shop/files/NANA_Web_Element-03_1512x.jpg?v=1647897627" alt="Loading Banner">
+    </div>
+
+    <div id="main-content-wrapper">
+        <header>
+            <img class="logo" src="https://nanacoffeeroasters.com/cdn/shop/files/nana_coffee_roasters_logo_280x.png?v=1613160486" alt="Nana Coffee Roasters Logo">
+        </header>
+
+        <!-- The main banner image is removed from here as it's now in the spinner overlay during loading -->
+        <!-- For consistent display AFTER loading, we will re-add it as a static element here -->
+        <div class="banner-image-section">
+            <img src="https://nanacoffeeroasters.com/cdn/shop/files/NANA_Web_Element-03_1512x.jpg?v=1647897627" alt="Nana Coffee Roasters Banner">
+        </div>
+
+        <div class="container">
+            <h1>E-commerce KPI Analysis Results</h1>
+            <p>This page displays Key Performance Indicators (KPIs) identified from your e-commerce data. The analysis is powered by a Google Gemini AI agent.</p>
+
+            <div class="platform-selection">
+                <label for="data-source">Data Source Platform:</label>
+                <select id="data-source">
+                    <!-- Platform options will be dynamically injected by Python -->
+                    <!-- Default options for template, will be overwritten by Python -->
+                    <option value="General">General E-commerce</option>
+                    <option value="TikTok Shop">TikTok Shop</option>
+                    <option value="Shopee">Shopee</option>
+                    <option value="Lazada">Lazada</option>
+                    <option value="Amazon">Amazon</option>
+                </select>
+                <div class="info-box">
+                    <p><strong>Note:</strong> The analysis displayed here was generated based on the <code>selected_platform</code> variable set in the <code>analyze_ecommerce.py</code> script when it was last run. This dropdown on the web page is for display purposes only.</p>
+                    <p><strong>To perform analysis:</strong> You need to run the Python script (<code>analyze_ecommerce.py</code>) on your local machine. Place your CSV files in the <code>ecommerce_data</code> folder next to the script.</p>
+                </div>
+            </div>
+
+            <div id="kpi-results">
+                <!-- KPI results will be loaded here by JavaScript -->
+                <p>Processing KPI results...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Injected KPI data from Python script
+        // window.kpiData = {...};
+        // window.selectedPlatform = "...";
+        // The rest of the original script logic follows below this comment.
+        // DO NOT REMOVE THE COMMENT ABOVE THIS LINE.
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const data = window.kpiData; // Data is now directly available
+            const selectedPlatform = window.selectedPlatform; // Selected platform is also available
+
+            const kpiResultsDiv = document.getElementById('kpi-results');
+            const platformSelect = document.getElementById('data-source');
+            const spinnerOverlay = document.getElementById('spinner-overlay');
+            const mainContentWrapper = document.getElementById('main-content-wrapper');
+
+            kpiResultsDiv.innerHTML = ''; // Clear initial message
+
+            // Pre-select the platform option in the dropdown
+            if (platformSelect && selectedPlatform) {
+                platformSelect.value = selectedPlatform;
+            }
+
+            if (data && data.kpis && Array.isArray(data.kpis) && data.kpis.length > 0) {
+                data.kpis.forEach(kpi => {
+                    const kpiSection = document.createElement('div');
+                    kpiSection.classList.add('kpi-section');
+
+                    const columnsUsed = Array.isArray(kpi.columns_used) ? kpi.columns_used : (typeof kpi.columns_used === 'string' ? kpi.columns_used.split(',').map(c => c.trim()) : ['N/A']);
+
+                    kpiSection.innerHTML = `
+                        <h3>${kpi.name_en} (<small>${kpi.name_th}</small>)</h3>
+                        <button class="lang-toggle" data-lang="en">Switch to Thai / เปลี่ยนเป็นภาษาไทย</button>
+                        <div class="kpi-content-en">
+                            <p><strong>Description:</strong> ${kpi.description_en}</p>
+                            <p><strong>Columns Used:</strong> <code>${columnsUsed.join(', ')}</code></p>
+                            <p><strong>Why it Matters:</strong> ${kpi.why_it_matters_en}</p>
+                            <p><strong>Significance & Advice:</strong> ${kpi.significance_and_advice_en}</p>
+                        </div>
+                        <div class="kpi-content-th hidden">
+                            <p><strong>คำอธิบาย:</strong> ${kpi.description_th}</p>
+                            <p><strong>คอลัมน์ที่ใช้:</strong> <code>${columnsUsed.join(', ')}</code></p>
+                            <p><strong>ความสำคัญ:</strong> ${kpi.why_it_matters_th}</p>
+                            <p><strong>ความสำคัญและคำแนะนำ:</strong> ${kpi.significance_and_advice_th}</p>
+                        </div>
+                    `;
+                    kpiResultsDiv.appendChild(kpiSection);
+                });
+
+                // Add language toggle functionality
+                document.querySelectorAll('.lang-toggle').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const kpiSection = this.closest('.kpi-section');
+                        const contentEn = kpiSection.querySelector('.kpi-content-en');
+                        const contentTh = kpiSection.querySelector('.kpi-content-th');
+
+                        if (contentEn.classList.contains('hidden')) {
+                            contentEn.classList.remove('hidden');
+                            contentTh.classList.add('hidden');
+                            this.textContent = 'Switch to Thai / เปลี่ยนเป็นภาษาไทย';
+                        } else {
+                            contentEn.classList.add('hidden');
+                            contentTh.classList.remove('hidden');
+                            this.textContent = 'Switch to English / เปลี่ยนเป็นภาษาอังกฤษ';
+                        }
+                    });
+                });
+
+            } else {
+                kpiResultsDiv.innerHTML = '<p>No KPI data found or data format is incorrect. Please ensure your Python script ran successfully and generated valid KPI data into the HTML file.</p>';
+            }
+
+            // After content is rendered, fade out spinner and show main content wrapper
+            spinnerOverlay.style.opacity = '0';
+            spinnerOverlay.style.visibility = 'hidden';
+
+            mainContentWrapper.style.opacity = '1';
+            mainContentWrapper.style.visibility = 'visible';
+            document.body.style.overflow = 'auto'; /* Restore scrollbar */
+        });
+    </script>
+</body>
+</html>
