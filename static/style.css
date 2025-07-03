@@ -1,0 +1,207 @@
+/* --- General Body & Font Styles --- */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #111827; /* Dark Gray/Blue */
+    color: #d1d5db; /* Light Gray */
+    margin: 0;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- Header & Logo --- */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    height: 4rem;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 1.125rem;
+    color: #9ca3af; /* Medium Gray */
+    margin-top: 0.5rem;
+}
+
+/* --- Main Content & Cards --- */
+main {
+    width: 100%;
+}
+
+.card {
+    background: rgba(31, 41, 55, 0.5); /* Semi-transparent darker gray */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Upload Area --- */
+.upload-area {
+    border: 2px dashed #4b5563; /* Dashed Gray */
+    border-radius: 1rem;
+    padding: 2.5rem;
+    text-align: center;
+    transition: border-color 0.3s ease;
+}
+
+.upload-area.dragover {
+    border-color: #6366f1; /* Indigo */
+}
+
+.upload-icon svg {
+    margin: 0 auto;
+    height: 3rem;
+    width: 3rem;
+    color: #6b7280; /* Lighter Gray */
+}
+
+.upload-text {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.upload-label {
+    position: relative;
+    cursor: pointer;
+    font-weight: 600;
+    color: #818cf8; /* Light Indigo */
+    transition: color 0.3s ease;
+}
+
+.upload-label:hover {
+    color: #a5b4fc; /* Lighter Indigo */
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.file-info {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* --- Loading Spinner --- */
+#loading-indicator {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 4px solid #4b5563;
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Analysis Output Formatting --- */
+#analysis-output {
+    color: #d1d5db;
+    line-height: 1.6;
+}
+
+#analysis-output h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #374151; /* Darker border */
+}
+
+#analysis-output h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+#analysis-output ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+#analysis-output li {
+    margin-bottom: 0.5rem;
+}
+
+#analysis-output p {
+    margin-bottom: 1rem;
+}
+
+/* --- Buttons & Utility --- */
+.btn {
+    width: 100%;
+    margin-top: 1.5rem;
+    background-color: #4f46e5; /* Indigo */
+    color: #ffffff;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+.btn:hover {
+    background-color: #4338ca; /* Darker Indigo */
+}
+
+.hidden {
+    display: none;
+}
+
+#error-box {
+    margin-top: 2rem;
+    background-color: rgba(153, 27, 27, 0.2);
+    border: 1px solid #ef4444; /* Red */
+    color: #fca5a5; /* Light Red */
+    padding: 1rem;
+    border-radius: 0.75rem;
+}
