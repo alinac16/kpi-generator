@@ -3,80 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI CSV Analyzer</title>
-    
-    <!-- Custom Stylesheet -->
+    <title>Hybrid AI Data Cleaner</title>
+    <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
-    <!-- Marked.js for rendering Markdown -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="container">
+        <h1>Hybrid AI Data Cleaner</h1>
+        
+        <!-- Step 1: Upload CSV -->
+        <h2>1. Upload your Data</h2>
+        <label for="csv-file" class="file-upload-label">Choose CSV File</label>
+        <input type="file" id="csv-file" accept=".csv">
+        <span id="file-name">No file selected</span>
+        
+        <!-- Step 2: High-level Goal -->
+        <h2>2. Describe Your Cleaning Goal</h2>
+        <textarea id="prompt-input" placeholder="e.g., Clean up the price column by removing currency symbols and make it a number. Also, standardize the product categories."></textarea>
+        <button id="generate-steps-btn" disabled>Generate Cleaning Steps</button>
+        
+        <!-- Step 3: Review and Edit Steps -->
+        <h2>3. Review & Edit AI-Generated Steps</h2>
+        <div id="steps-container">
+            <p>Generated steps will appear here...</p>
+        </div>
+        <button id="apply-cleaning-btn" disabled>Apply Cleaning & Show Preview</button>
+        
+        <!-- Step 4: Preview Cleaned Data -->
+        <h2>4. Preview Cleaned Data</h2>
+        <div id="data-preview">
+            <p>A preview of the cleaned data will appear here.</p>
+        </div>
 
-        <!-- Header with Logo -->
-        <header>
-            <img src="https://nanacoffeeroasters.com/cdn/shop/files/nana_coffee_roasters_logo_280x.png?v=1613160486" 
-                 alt="Logo" 
-                 class="logo"
-                 onerror="this.onerror=null; this.src='https://placehold.co/280x64/1a202c/ffffff?text=Logo';">
-            <h1>AI CSV Analyzer</h1>
-            <p class="subtitle">Upload your CSV and get instant analysis suggestions.</p>
-        </header>
-
-        <main>
-            <!-- File Upload Card -->
-            <div id="upload-card" class="card">
-                <div class="upload-area">
-                    <div class="upload-icon">
-                        <svg stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
-                    </div>
-                    <div class="upload-text">
-                        <label for="csv-file-input" class="upload-label">
-                            <span>Select a file</span>
-                            <input id="csv-file-input" name="csv-file" type="file" class="sr-only" accept=".csv">
-                        </label>
-                        <p>or drag and drop</p>
-                    </div>
-                    <p id="file-name" class="file-info">CSV up to 10MB</p>
-                </div>
-            </div>
-
-            <!-- Loading Indicator -->
-            <div id="loading-indicator" class="hidden">
-                <div class="spinner"></div>
-                <p>Analyzing your data... this may take a moment.</p>
-            </div>
-
-            <!-- Analysis Output -->
-            <div id="analysis-container" class="hidden">
-                <div class="card">
-                    <div id="analysis-output">
-                        <!-- AI-generated analysis will be injected here -->
-                    </div>
-                </div>
-                <button id="reset-button" class="btn">
-                    Analyze Another File
-                </button>
-            </div>
-            
-            <!-- Error Message Box -->
-            <div id="error-box" class="hidden">
-                <strong>Error:</strong>
-                <span id="error-message"></span>
-            </div>
-        </main>
+        <div id="message-area"></div>
     </div>
 
-    <!-- Custom JavaScript -->
+    <!-- Link to the external JavaScript file -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

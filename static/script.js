@@ -1,123 +1,240 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM Element References ---
-    const fileInput = document.getElementById('csv-file-input');
-    const fileNameDisplay = document.getElementById('file-name');
-    const uploadCard = document.getElementById('upload-card');
-    const uploadArea = document.querySelector('.upload-area');
-    const loadingIndicator = document.getElementById('loading-indicator');
-    const analysisContainer = document.getElementById('analysis-container');
-    const analysisOutput = document.getElementById('analysis-output');
-    const resetButton = document.getElementById('reset-button');
-    const errorBox = document.getElementById('error-box');
-    const errorMessage = document.getElementById('error-message');
+// --- DOM Element References ---
+const csvFileInput = document.getElementById('csv-file');
+const fileNameSpan = document.getElementById('file-name');
+const promptInput = document.getElementById('prompt-input');
+const generateStepsBtn = document.getElementById('generate-steps-btn');
+const stepsContainer = document.getElementById('steps-container');
+const applyCleaningBtn = document.getElementById('apply-cleaning-btn');
+const dataPreview = document.getElementById('data-preview');
+const messageArea = document.getElementById('message-area');
 
-    // --- Event Listeners ---
+let uploadedFile = null;
 
-    // Handle file selection via button
-    fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
+// --- Event Listeners ---
+csvFileInput.addEventListener('change', handleFileUpload);
+generateStepsBtn.addEventListener('click', handleGenerateSteps);
+applyCleaningBtn.addEventListener('click', handleApplyCleaning);
 
-    // Handle drag and drop events
-    uploadArea.addEventListener('dragover', (event) => {
-        event.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    uploadArea.addEventListener('dragleave', (event) => {
-        event.preventDefault();
-        uploadArea.classList.remove('dragover');
-    });
-    uploadArea.addEventListener('drop', (event) => {
-        event.preventDefault();
-        uploadArea.classList.remove('dragover');
-        const file = event.dataTransfer.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
-
-    // Handle reset button click
-    resetButton.addEventListener('click', resetUI);
-
-    // --- UI Update Functions ---
-
-    function resetUI() {
-        fileInput.value = ''; // Clear the file input
-        fileNameDisplay.textContent = 'CSV up to 10MB';
-        uploadCard.classList.remove('hidden');
-        analysisContainer.classList.add('hidden');
-        loadingIndicator.classList.add('hidden');
-        errorBox.classList.add('hidden');
-    }
-
-    function showLoading() {
-        uploadCard.classList.add('hidden');
-        loadingIndicator.classList.remove('hidden');
-        errorBox.classList.add('hidden');
-        analysisContainer.classList.add('hidden');
-    }
-
-    function showResults(markdownContent) {
-        analysisOutput.innerHTML = marked.parse(markdownContent);
-        loadingIndicator.classList.add('hidden');
-        analysisContainer.classList.remove('hidden');
-    }
-
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorBox.classList.remove('hidden');
-        loadingIndicator.classList.add('hidden');
-        // Show the reset button so user can try again
-        resetButton.parentElement.classList.remove('hidden'); 
-    }
-
-    // --- Core Logic ---
-
-    function handleFile(file) {
-        // Validate file type and size
-        if (!file.type.match('text/csv') && !file.name.endsWith('.csv')) {
-            showError('Please upload a valid CSV file.');
-            resetUI();
-            return;
-        }
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-            showError('File is too large. Please upload a file smaller than 10MB.');
-            resetUI();
-            return;
-        }
-
-        fileNameDisplay.textContent = file.name;
-        showLoading();
-
-        // Use FormData to send the file to the backend
+// --- Functions ---
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (file && file.type === "text/csv") {
+        uploadedFile = file;
+        fileNameSpan.textContent = file.name;
+        generateStepsBtn.disabled = false;
+        
+        // Upload the file immediately to the backend
         const formData = new FormData();
-        formData.append('file', file);
-
-        // Fetch request to the Python backend
-        fetch('/analyze', {
+        formData.append('file', uploadedFile);
+        
+        fetch('/upload', {
             method: 'POST',
-            body: formData,
+            body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                // If response is not ok, parse the JSON to get the error message
-                return response.json().then(err => { throw new Error(err.error || 'An unknown error occurred.') });
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            if (data.error) {
-                // Handle application-specific errors from the backend
-                throw new Error(data.error);
+            if(data.success) {
+                showMessage(`File '${data.filename}' uploaded successfully. Original data has ${data.rows} rows.`, 'success');
+                displayDataPreview(data.preview);
+            } else {
+                showMessage(data.error, 'error');
             }
-            showResults(data.analysis);
         })
         .catch(error => {
-            console.error("Error:", error);
-            showError(error.message);
+            console.error('Error:', error);
+            showMessage('An error occurred during file upload.', 'error');
         });
+
+    } else {
+        showMessage('Please select a valid .csv file.', 'error');
+        fileNameSpan.textContent = 'No file selected';
+        generateStepsBtn.disabled = true;
+        uploadedFile = null;
     }
-});
+}
+
+async function handleGenerateSteps() {
+    if (!uploadedFile || !promptInput.value) {
+        showMessage('Please upload a file and describe your goal first.', 'error');
+        return;
+    }
+    
+    generateStepsBtn.disabled = true;
+    generateStepsBtn.textContent = 'Generating...';
+
+    try {
+        const response = await fetch('/generate_steps', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: promptInput.value })
+        });
+        const data = await response.json();
+
+        if (data.steps) {
+            renderSteps(data.steps);
+            applyCleaningBtn.disabled = false;
+            showMessage('AI has generated cleaning steps. You can now edit, reorder, or delete them.', 'success');
+        } else {
+            showMessage(data.error || 'Could not generate steps.', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('An error occurred while generating steps.', 'error');
+    } finally {
+        generateStepsBtn.disabled = false;
+        generateStepsBtn.textContent = 'Generate Cleaning Steps';
+    }
+}
+
+async function handleApplyCleaning() {
+    const stepElements = document.querySelectorAll('.step-item input[type="text"]');
+    const steps = Array.from(stepElements).map(input => input.value);
+    
+    if (steps.length === 0) {
+        showMessage('No cleaning steps to apply.', 'error');
+        return;
+    }
+
+    applyCleaningBtn.disabled = true;
+    applyCleaningBtn.textContent = 'Cleaning...';
+
+    try {
+        const response = await fetch('/apply_cleaning', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ steps: steps })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showMessage(data.message, 'success');
+            displayDataPreview(data.preview);
+        } else {
+            showMessage(data.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('An error occurred while applying cleaning steps.', 'error');
+    } finally {
+        applyCleaningBtn.disabled = false;
+        applyCleaningBtn.textContent = 'Apply Cleaning & Show Preview';
+    }
+}
+
+function renderSteps(steps) {
+    stepsContainer.innerHTML = ''; // Clear existing steps
+    steps.forEach((stepText, index) => {
+        const stepItem = document.createElement('div');
+        stepItem.className = 'step-item';
+        stepItem.draggable = true;
+        stepItem.innerHTML = `
+            <span class="drag-handle">☰</span>
+            <input type="text" value="${escapeHtml(stepText)}">
+            <div class="step-actions">
+                <button class="delete-btn" title="Delete Step">✖</button>
+            </div>
+        `;
+        stepsContainer.appendChild(stepItem);
+        
+        // Add event listener for the delete button
+        stepItem.querySelector('.delete-btn').addEventListener('click', () => {
+            stepItem.remove();
+            if (stepsContainer.children.length === 0) {
+                applyCleaningBtn.disabled = true;
+                stepsContainer.innerHTML = '<p>No steps defined. Generate new ones.</p>';
+            }
+        });
+    });
+
+    // Add drag and drop functionality
+    let draggedItem = null;
+    stepsContainer.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('step-item')) {
+            draggedItem = e.target;
+            setTimeout(() => {
+                if(draggedItem) draggedItem.style.opacity = '0.5';
+            }, 0);
+        }
+    });
+    stepsContainer.addEventListener('dragend', (e) => {
+        setTimeout(() => {
+            if (draggedItem) {
+                draggedItem.style.opacity = '1';
+                draggedItem = null;
+            }
+        }, 0);
+    });
+    stepsContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(stepsContainer, e.clientY);
+        if (draggedItem) {
+            if (afterElement == null) {
+                stepsContainer.appendChild(draggedItem);
+            } else {
+                stepsContainer.insertBefore(draggedItem, afterElement);
+            }
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.step-item:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function displayDataPreview(data) {
+    if (!data || data.length === 0) {
+        dataPreview.innerHTML = '<p>No data to display.</p>';
+        return;
+    }
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const tbody = document.createElement('tbody');
+    
+    // Headers
+    const headerRow = document.createElement('tr');
+    Object.keys(data[0]).forEach(key => {
+        const th = document.createElement('th');
+        th.textContent = key;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    
+    // Body
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        Object.values(row).forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    
+    dataPreview.innerHTML = '';
+    dataPreview.appendChild(table);
+}
+
+function showMessage(text, type) {
+    messageArea.innerHTML = `<div class="message ${type}">${escapeHtml(text)}</div>`;
+}
+
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
